@@ -89,7 +89,45 @@ function Ticket({ pedido, onUpdateEstado }) {
       <div className="ticket-actions">
         <button className="btn" onClick={previewPedido}>Vista previa</button>
         <button className="btn stamp" onClick={imprimirPedido} disabled={pedido.estado === 'entregado'}>Imprimir</button>
-        <button className="btn primary" onClick={avanzarEstado} disabled={pedido.estado === 'entregado'}>Siguiente estado →</button>
+        
+        {pedido.estado !== 'listo' && pedido.estado !== 'entregado' && (
+          <button 
+            className="btn btn-listo" 
+            onClick={() => onUpdateEstado(pedido.id, 'listo')}
+            title="Marcar pedido como listo para retirar"
+          >
+            ✓ Listo
+          </button>
+        )}
+
+        {pedido.estado === 'listo' && (
+          <>
+            <button 
+              className="btn btn-nolisto" 
+              onClick={() => onUpdateEstado(pedido.id, 'imprimiendo')}
+              title="Volver a poner en preparación"
+            >
+              ✕ No listo
+            </button>
+            <button 
+              className="btn primary" 
+              onClick={() => onUpdateEstado(pedido.id, 'entregado')}
+              title="Marcar como entregado al cliente"
+            >
+              📦 Entregar
+            </button>
+          </>
+        )}
+
+        {pedido.estado === 'entregado' && (
+          <button 
+            className="btn btn-nolisto" 
+            onClick={() => onUpdateEstado(pedido.id, 'listo')}
+            title="Deshacer entrega"
+          >
+            ↩ Reabrir
+          </button>
+        )}
       </div>
     </div>
   );

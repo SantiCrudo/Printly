@@ -303,6 +303,20 @@ textarea {
   box-shadow: 0 2px 6px rgba(178, 58, 46, 0.25);
 }
 
+.btn-listo {
+  background: #2E7D32 !important;
+  border-color: #2E7D32 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.25);
+}
+
+.btn-nolisto {
+  background: transparent !important;
+  color: var(--text-dim) !important;
+  border: 1px solid var(--line) !important;
+}
+
 .btn:disabled {
   opacity: .4;
   cursor: not-allowed;
@@ -357,6 +371,58 @@ textarea {
   padding: 16px;
   border-radius: 10px;
   margin-bottom: 20px;
+}
+
+.ready-bell-banner {
+  background: #E8F5E9;
+  border: 1px solid #81C784;
+  color: #1B5E20;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bell-wiggle {
+  font-size: 26px;
+  display: inline-block;
+  animation: bellRing 1.3s ease infinite;
+  transform-origin: top center;
+}
+
+@keyframes bellRing {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-14deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(6deg); }
+  60% { transform: rotate(-6deg); }
+  70% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+.sound-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 5px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.sound-indicator:hover {
+  background: #fff;
+  color: var(--ink);
 }
 
 .tracking-icon {

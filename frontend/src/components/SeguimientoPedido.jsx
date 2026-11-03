@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '../utils';
 
 const STEPS = [
@@ -51,12 +51,66 @@ const STATUS_DETAILS = {
   }
 };
 
+/**
+ * Sintetiza un timbre/campanita cristalina con Web Audio API ("Ding-Dong")
+ * 100% autónomo, sin archivos externos ni retardos de red.
+ */
+export function playBellChime() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    const now = ctx.currentTime;
+
+    const playTone = (freq, start, duration, gainVal = 0.28) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(gainVal, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+
+    // Tono 1 brillante: Mi6 (1318.5 Hz) + armónico campana (2637 Hz)
+    playTone(1318.5, now, 0.6, 0.24);
+    playTone(2637, now, 0.35, 0.08);
+
+    // Tono 2 ("Ding-Dong"): Sol#6 (1661.2 Hz) + armónico (3322 Hz)
+    playTone(1661.2, now + 0.22, 1.2, 0.3);
+    playTone(3322.4, now + 0.22, 0.6, 0.08);
+
+    // Vibración en dispositivos móviles que la soporten
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 300]);
+    }
+  } catch (err) {
+    console.warn('No se pudo reproducir la campanita:', err);
+  }
+}
+
 function SeguimientoPedido({ token, onVolver }) {
   const [pedido, setPedido] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copiado, setCopiado] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [soundTested, setSoundTested] = useState(false);
+
+  const hasRungRef = useRef(false);
 
   const fetchSeguimiento = async (isManual = false) => {
     if (!token) {
@@ -74,6 +128,22 @@ function SeguimientoPedido({ token, onVolver }) {
         throw new Error('Error al consultar el estado del pedido');
       }
       const data = await res.json();
+
+      // Si el pedido pasó al estado 'listo' y aún no sonó la campana
+      if (data.estado === 'listo') {
+        if (!hasRungRef.current) {
+          hasRungRef.current = true;
+          playBellChime();
+          if (document.hidden) {
+            document.title = '🔔 ¡Tu pedido está listo! - Printly';
+          }
+        }
+      } else {
+        // Si no está listo, reseteamos la campana por si se vuelve a marcar
+        hasRungRef.current = false;
+        document.title = 'Printly - Seguimiento en vivo';
+      }
+
       setPedido(data);
       setError(null);
     } catch (err) {
@@ -86,9 +156,12 @@ function SeguimientoPedido({ token, onVolver }) {
 
   useEffect(() => {
     fetchSeguimiento();
-    // Auto-actualizar cada 15 segundos para ver cambios en vivo
-    const timer = setInterval(() => fetchSeguimiento(true), 15000);
-    return () => clearInterval(timer);
+    // Auto-actualizar cada 8 segundos para notificar de inmediato
+    const timer = setInterval(() => fetchSeguimiento(true), 8000);
+    return () => {
+      clearInterval(timer);
+      document.title = 'Printly';
+    };
   }, [token]);
 
   const handleCopiarEnlace = async () => {
@@ -106,6 +179,12 @@ function SeguimientoPedido({ token, onVolver }) {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
     }
+  };
+
+  const handleTestSound = () => {
+    playBellChime();
+    setSoundTested(true);
+    setTimeout(() => setSoundTested(false), 2000);
   };
 
   if (loading) {
@@ -144,6 +223,25 @@ function SeguimientoPedido({ token, onVolver }) {
 
   return (
     <div className="form-card tracking-card">
+      {/* Alerta animada y sonora cuando está listo */}
+      {isListo && (
+        <div className="ready-bell-banner">
+          <span className="bell-wiggle">🔔</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>¡Ding! Tu pedido ya está listo</div>
+            <div style={{ fontSize: 12.5, opacity: 0.9 }}>Acercate al mostrador con tu código de retiro.</div>
+          </div>
+          <button 
+            className="btn" 
+            style={{ padding: '6px 10px', fontSize: 12, background: '#fff', border: '1px solid #81C784', color: '#1B5E20' }}
+            onClick={playBellChime}
+            title="Hacer sonar campanita de nuevo"
+          >
+            🔔 Sonar
+          </button>
+        </div>
+      )}
+
       {/* Cabecera de estado principal */}
       <div 
         className="tracking-status-banner"
@@ -154,9 +252,19 @@ function SeguimientoPedido({ token, onVolver }) {
         }}
       >
         <div className="tracking-icon">{currentInfo.icon}</div>
-        <div className="tracking-status-text">
+        <div className="tracking-status-text" style={{ flex: 1 }}>
           <div className="tracking-status-title">{currentInfo.title}</div>
           <div className="tracking-status-sub">{currentInfo.msg}</div>
+
+          {!isListo && pedido.estado !== 'entregado' && (
+            <div 
+              className="sound-indicator" 
+              onClick={handleTestSound}
+              title="Tocar para probar sonido y habilitar notificaciones"
+            >
+              <span>{soundTested ? '✓ ¡Campanita probada!' : '🔔 Te avisaremos con sonido cuando esté listo'}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -224,7 +332,7 @@ function SeguimientoPedido({ token, onVolver }) {
         </div>
       </div>
 
-      {/* Acciones directas y sin WhatsApp */}
+      {/* Acciones */}
       <div className="tracking-actions">
         <button 
           className="btn" 
