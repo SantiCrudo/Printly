@@ -20,10 +20,13 @@ logger = logging.getLogger("printly")
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# CORS con lista explícita de orígenes (no wildcard con credenciales)
+# CORS con lista explícita de orígenes y soporte para red local (LAN) en desarrollo
+cors_regex = r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$" if settings.ENVIRONMENT == "development" else None
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

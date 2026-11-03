@@ -1,4 +1,19 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+export function getApiBaseUrl() {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname;
+    // Si se accede desde otra máquina en la red local (ej. 192.168.x.x) y VITE_API_URL
+    // apunta a localhost o no está configurado, usar automáticamente el mismo host en puerto 8000
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      if (!envUrl || envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+        return `${window.location.protocol}//${hostname}:8000`;
+      }
+    }
+  }
+  return (envUrl || 'http://localhost:8000').replace(/\/$/, '');
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export function getTenantSubdomain() {
   const host = window.location.hostname;
@@ -24,10 +39,8 @@ export function getApiUrl(endpoint) {
     return endpoint;
   }
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  if (API_BASE_URL) {
-    return `${API_BASE_URL}${cleanEndpoint}`;
-  }
-  return cleanEndpoint;
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl}${cleanEndpoint}`;
 }
 
 export async function apiFetch(url, options = {}) {
