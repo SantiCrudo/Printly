@@ -139,7 +139,7 @@ function ClienteForm({ onConfirm }) {
           <textarea placeholder="Ej: 2 juegos, doble faz, de pág 3 a la 10" value={desc} onChange={e => setDesc(e.target.value)} />
         </div>
 
-        <div className="grid2">
+        <div className="grid2 grid2-num">
           <div className="field">
             <label>Copias / juegos</label>
             <input type="number" min="1" value={copias} onChange={e => setCopias(parseInt(e.target.value) || 1)} />
@@ -151,15 +151,23 @@ function ClienteForm({ onConfirm }) {
         </div>
 
         <div className="field">
-          <label>Opciones</label>
+          <label>Opciones de impresión</label>
           <div className="toggle-row">
-            <label><input type="checkbox" checked={color} onChange={e => setColor(e.target.checked)} /> Color</label>
-            <label><input type="checkbox" checked={dobleFaz} onChange={e => setDobleFaz(e.target.checked)} /> Doble faz</label>
-            <select style={{ width: 'auto' }} value={tamano} onChange={e => setTamano(e.target.value)}>
-              <option value="A4">A4</option>
-              {precios?.recargo_a3 > 1 && <option value="A3">A3</option>}
-              {precios?.recargo_oficio > 1 && <option value="Oficio">Oficio</option>}
-            </select>
+            <label className="chip-option">
+              <input type="checkbox" checked={color} onChange={e => setColor(e.target.checked)} /> 
+              <span>Color</span>
+            </label>
+            <label className="chip-option">
+              <input type="checkbox" checked={dobleFaz} onChange={e => setDobleFaz(e.target.checked)} /> 
+              <span>Doble faz</span>
+            </label>
+            <div className="select-chip">
+              <select value={tamano} onChange={e => setTamano(e.target.value)}>
+                <option value="A4">Tamaño A4</option>
+                {precios?.recargo_a3 > 1 && <option value="A3">Tamaño A3</option>}
+                {precios?.recargo_oficio > 1 && <option value="Oficio">Tamaño Oficio</option>}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -175,9 +183,9 @@ function ClienteForm({ onConfirm }) {
           </div>
         )}
 
-        <div style={{ marginTop: 16 }}>
-          <button className="btn stamp" onClick={handleSubmit} disabled={isSubmitting || !precios || (!user && !turnstileToken)}>
-            {isSubmitting ? 'Enviando...' : 'Confirmar pedido'}
+        <div style={{ marginTop: 18 }}>
+          <button className="btn stamp submit-btn" onClick={handleSubmit} disabled={isSubmitting || !precios || (!user && !turnstileToken)}>
+            {isSubmitting ? 'Enviando pedido...' : 'Confirmar pedido →'}
           </button>
         </div>
       </div>

@@ -73,7 +73,7 @@ function AppContent() {
             className={view === 'Cliente' ? 'active' : ''} 
             onClick={() => navigateTo('Cliente')}
           >
-            Vista invitado
+            Hacer pedido
           </button>
 
           {!user ? (
@@ -81,14 +81,14 @@ function AppContent() {
               className={view === 'Auth' ? 'active' : ''} 
               onClick={() => {setView('Auth'); setAuthMode('login');}}
             >
-              Iniciar sesión
+              Ingresar
             </button>
           ) : (
             <button 
               className={view === 'MiPanel' ? 'active' : ''} 
               onClick={() => navigateTo('MiPanel')}
             >
-              Mi Panel
+              Mis pedidos
             </button>
           )}
 
@@ -96,7 +96,7 @@ function AppContent() {
             className={view === 'Negocio' ? 'active' : ''} 
             onClick={() => navigateTo('Negocio')}
           >
-            Panel del negocio
+            Negocio
           </button>
         </nav>
       </header>
@@ -107,7 +107,15 @@ function AppContent() {
             {!pedidoConfirmado ? (
               <ClienteForm onConfirm={handleConfirm} />
             ) : (
-              <ClienteConfirm pedidoData={pedidoConfirmado} onNew={handleNewOrder} />
+              <ClienteConfirm 
+                pedidoData={pedidoConfirmado} 
+                onNew={handleNewOrder}
+                onVerSeguimiento={(token) => {
+                  setSeguimientoToken(token);
+                  window.history.pushState({}, '', `/seguimiento/${token}`);
+                  setView('Seguimiento');
+                }}
+              />
             )}
           </section>
         )}

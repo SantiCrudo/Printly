@@ -58,12 +58,6 @@ function Ticket({ pedido, onUpdateEstado }) {
     if (i < ESTADOS.length - 1) onUpdateEstado(pedido.id, ESTADOS[i + 1]);
   };
 
-  const avisarWhatsapp = () => {
-    const link = `${window.location.protocol}//${window.location.host}/seguimiento/${pedido.token}`;
-    const msg = encodeURIComponent(`Hola ${pedido.nombre}, tu pedido ${pedido.codigo} está ${ESTADO_LABEL[pedido.estado].toLowerCase()}. ${link}`);
-    window.open('https://wa.me/?text=' + msg, '_blank');
-  };
-
   return (
     <div className="ticket">
       <div className="ticket-head">
@@ -88,17 +82,14 @@ function Ticket({ pedido, onUpdateEstado }) {
         </div>
         <div className="file-row">
           <span className="dot"></span>
-          <span>{pedido.fileName}</span>
+          <span style={{ wordBreak: 'break-all' }}>{pedido.fileName}</span>
         </div>
       </div>
 
       <div className="ticket-actions">
-        <button className="btn primary" onClick={previewPedido}>Vista previa</button>
+        <button className="btn" onClick={previewPedido}>Vista previa</button>
         <button className="btn stamp" onClick={imprimirPedido} disabled={pedido.estado === 'entregado'}>Imprimir</button>
-        <button className="btn" onClick={avanzarEstado} disabled={pedido.estado === 'entregado'}>Marcar siguiente estado</button>
-        {pedido.tipo === 'invitado' && (
-          <button className="btn wa" onClick={avisarWhatsapp}>Avisar por WhatsApp</button>
-        )}
+        <button className="btn primary" onClick={avanzarEstado} disabled={pedido.estado === 'entregado'}>Siguiente estado →</button>
       </div>
     </div>
   );

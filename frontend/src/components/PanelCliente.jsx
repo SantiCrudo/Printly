@@ -57,12 +57,20 @@ function PanelCliente() {
   }
 
   if (view === 'confirm') {
-    return <ClienteConfirm pedidoData={pedidoConfirmado} onNew={() => setView('list')} />;
+    return (
+      <ClienteConfirm 
+        pedidoData={pedidoConfirmado} 
+        onNew={() => setView('list')} 
+        onVerSeguimiento={(token) => {
+          window.location.href = `/seguimiento/${token}`;
+        }}
+      />
+    );
   }
 
   return (
     <div id="panelCliente">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
         <h2 className="section" style={{ margin: 0 }}>Mis Pedidos</h2>
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn primary" onClick={() => setView('new')}>+ Nuevo pedido</button>
