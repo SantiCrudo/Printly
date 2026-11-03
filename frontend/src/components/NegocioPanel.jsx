@@ -215,7 +215,7 @@ function NegocioPanel() {
               ))
             )}
           </div>
-          <iframe id="printFrame" style={{display: 'none'}} title="Print Frame" />
+          <iframe id="printFrame" style={{ position: 'fixed', right: '100%', bottom: '100%', width: 0, height: 0, border: 0 }} title="Print Frame" />
         </>
       )}
 

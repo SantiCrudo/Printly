@@ -1,4 +1,4 @@
-import { getApiUrl } from '../utils';
+import { getApiUrl, apiFetch } from '../utils';
 
 const ESTADOS = ['recibido', 'en_cola', 'imprimiendo', 'listo', 'entregado'];
 const ESTADO_LABEL = { recibido: 'Recibido', en_cola: 'En cola', imprimiendo: 'Imprimiendo', listo: 'Listo para retirar', entregado: 'Entregado' };
@@ -14,10 +14,40 @@ function Ticket({ pedido, onUpdateEstado }) {
     window.open(fileUrl, '_blank');
   };
 
-  const imprimirPedido = () => {
-    const frame = document.getElementById('printFrame');
-    frame.onload = () => { frame.contentWindow.focus(); frame.contentWindow.print(); };
-    frame.src = fileUrl;
+  const imprimirPedido = async () => {
+    try {
+      const res = await apiFetch(fileUrl);
+      if (!res.ok) throw new Error('No se pudo obtener el archivo para imprimir');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const frame = document.getElementById('printFrame');
+      if (frame) {
+        frame.onload = () => {
+          try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+          } catch (e) {
+            console.warn('Fallback al imprimir:', e);
+            const w = window.open(blobUrl, '_blank');
+            if (w) {
+              w.focus();
+              setTimeout(() => { try { w.print(); } catch (_) {} }, 500);
+            }
+          }
+        };
+        frame.src = blobUrl;
+      } else {
+        const w = window.open(blobUrl, '_blank');
+        if (w) {
+          w.focus();
+          setTimeout(() => { try { w.print(); } catch (_) {} }, 500);
+        }
+      }
+    } catch (err) {
+      console.error('Error al imprimir pedido:', err);
+      window.open(fileUrl, '_blank');
+    }
 
     if (pedido.estado === 'recibido') onUpdateEstado(pedido.id, 'en_cola');
     if (pedido.estado === 'en_cola') onUpdateEstado(pedido.id, 'imprimiendo');

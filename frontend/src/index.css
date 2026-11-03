@@ -127,7 +127,14 @@ textarea{resize:vertical;min-height:56px;}
 }
 .confirm .code{font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:.05em;margin:10px 0 6px;}
 
-#printFrame{display:none;}
+#printFrame {
+  position: fixed;
+  right: 100%;
+  bottom: 100%;
+  width: 0;
+  height: 0;
+  border: 0;
+}
 
 .tabs{display:flex;gap:6px;margin-bottom:16px;}
 .tabs button{
