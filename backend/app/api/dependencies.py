@@ -1,3 +1,4 @@
+import re
 from fastapi import Request, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from app.models.usuario import Usuario
 from app.core.config import settings
 from app.core.security import ALGORITHM
 from jose import jwt, JWTError
+
+IPV4_REGEX = re.compile(r"^(\d{1,3}\.){3}\d{1,3}$")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
@@ -19,12 +22,18 @@ def get_tenant_subdomain(request: Request) -> str:
     if settings.ALLOW_SUBDOMAIN_HEADER:
         header_subdomain = request.headers.get("X-Tenant-Subdomain")
         if header_subdomain:
-            return header_subdomain.strip().lower()
+            clean_sub = header_subdomain.strip().lower()
+            if not IPV4_REGEX.match(clean_sub) and not clean_sub.isdigit():
+                return clean_sub
 
     host = request.headers.get("host", "")
-    clean_host = host.split(":")[0]
+    clean_host = host.split(":")[0].strip()
+
+    if clean_host in ("localhost", "127.0.0.1") or IPV4_REGEX.match(clean_host):
+        return "demo"
+
     parts = clean_host.split(".")
-    if len(parts) >= 3:
+    if len(parts) >= 3 and not parts[0].isdigit():
         return parts[0].strip().lower()
 
     # Default fallback para dev/local

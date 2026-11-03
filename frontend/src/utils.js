@@ -20,9 +20,13 @@ export function getTenantSubdomain() {
   if (host === 'localhost' || host === '127.0.0.1') {
     return 'demo';
   }
+  // Si se accede directamente por dirección IP (IPv4), no es un subdominio -> usar demo
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+    return 'demo';
+  }
   const parts = host.split('.');
-  if (parts.length >= 3) {
-    return parts[0];
+  if (parts.length >= 3 && isNaN(parts[0])) {
+    return parts[0].toLowerCase();
   }
   return 'demo'; // fallback
 }
