@@ -1,0 +1,77 @@
+import { getApiUrl } from '../utils';
+
+const ESTADOS = ['recibido', 'en_cola', 'imprimiendo', 'listo', 'entregado'];
+const ESTADO_LABEL = { recibido: 'Recibido', en_cola: 'En cola', imprimiendo: 'Imprimiendo', listo: 'Listo para retirar', entregado: 'Entregado' };
+
+function Ticket({ pedido, onUpdateEstado }) {
+  const fmt = (n) => '$' + n.toLocaleString('es-AR');
+  const d = new Date(pedido.creado);
+  const timeStr = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+  const fileUrl = getApiUrl(`/api/archivos/${pedido.fileId}?token=${pedido.token}`);
+
+  const previewPedido = () => {
+    window.open(fileUrl, '_blank');
+  };
+
+  const imprimirPedido = () => {
+    const frame = document.getElementById('printFrame');
+    frame.onload = () => { frame.contentWindow.focus(); frame.contentWindow.print(); };
+    frame.src = fileUrl;
+
+    if (pedido.estado === 'recibido') onUpdateEstado(pedido.id, 'en_cola');
+    if (pedido.estado === 'en_cola') onUpdateEstado(pedido.id, 'imprimiendo');
+  };
+
+  const avanzarEstado = () => {
+    const i = ESTADOS.indexOf(pedido.estado);
+    if (i < ESTADOS.length - 1) onUpdateEstado(pedido.id, ESTADOS[i + 1]);
+  };
+
+  const avisarWhatsapp = () => {
+    const link = `${window.location.protocol}//${window.location.host}/seguimiento/${pedido.token}`;
+    const msg = encodeURIComponent(`Hola ${pedido.nombre}, tu pedido ${pedido.codigo} está ${ESTADO_LABEL[pedido.estado].toLowerCase()}. ${link}`);
+    window.open('https://wa.me/?text=' + msg, '_blank');
+  };
+
+  return (
+    <div className="ticket">
+      <div className="ticket-head">
+        <div>
+          <div className="ticket-code">{pedido.codigo} · {timeStr}</div>
+          <div style={{ marginTop: 6, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <b>{pedido.nombre}</b>
+            <span className={`badge-tipo badge-${pedido.tipo}`}>{pedido.tipo}</span>
+          </div>
+        </div>
+        <span className={`stamp-badge st-${pedido.estado}`}>{ESTADO_LABEL[pedido.estado]}</span>
+      </div>
+
+      <div className="ticket-body">
+        {pedido.desc ? pedido.desc : 'Sin descripción adicional.'}
+        <div className="meta-row">
+          <span>{pedido.copias} copia(s)</span>
+          <span>{pedido.paginas} pág.</span>
+          <span>{pedido.color ? 'Color' : 'B/N'}</span>
+          <span>{pedido.tamano}{pedido.dobleFaz ? ' · doble faz' : ''}</span>
+          <span><b>{fmt(pedido.precio)}</b></span>
+        </div>
+        <div className="file-row">
+          <span className="dot"></span>
+          <span>{pedido.fileName}</span>
+        </div>
+      </div>
+
+      <div className="ticket-actions">
+        <button className="btn primary" onClick={previewPedido}>Vista previa</button>
+        <button className="btn stamp" onClick={imprimirPedido} disabled={pedido.estado === 'entregado'}>Imprimir</button>
+        <button className="btn" onClick={avanzarEstado} disabled={pedido.estado === 'entregado'}>Marcar siguiente estado</button>
+        {pedido.tipo === 'invitado' && (
+          <button className="btn wa" onClick={avisarWhatsapp}>Avisar por WhatsApp</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default Ticket;
